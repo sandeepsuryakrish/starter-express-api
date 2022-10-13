@@ -7,7 +7,7 @@ async function produce(message) {
     var conn = await amqplib.connect(amqp_url, "heartbeat=60");
     var ch = await conn.createChannel()
     var exch = 'test_exchange';
-    var q = 'tasks';
+    var q = 'test_queue';
     var rkey = 'test_route';
     var msg = message;
     await ch.assertExchange(exch, 'direct', { durable: true }).catch(console.error);

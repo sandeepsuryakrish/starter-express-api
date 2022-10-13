@@ -3,26 +3,27 @@ const amqplib = require('amqplib/callback_api');
 const queue = 'tasks';
 const amqp = require("amqplib");
 var amqp_url = process.env.CLOUDAMQP_URL || 'amqps://bxydesvc:xVZgGBKGj9okAD9Q7DhGg7AYj16WxBay@puffin.rmq2.cloudamqp.com/bxydesvc';
+function doconnect() {
+    amqplib.connect(amqp_url, (err, conn) => {
+        if (err) throw err;
 
-// amqplib.connect(amqp_url, (err, conn) => {
-//     if (err) throw err;
+        // Listener
+        conn.createChannel((err, ch2) => {
+            if (err) throw err;
 
-//     // Listener
-//     conn.createChannel((err, ch2) => {
-//         if (err) throw err;
+            ch2.assertQueue(queue);
 
-//         ch2.assertQueue(queue);
-
-//         ch2.consume(queue, (msg) => {
-//             if (msg !== null) {
-//                 console.log(msg.content.toString());
-//                 ch2.ack(msg);
-//             } else {
-//                 console.log('Consumer cancelled by server');
-//             }
-//         });
-//     });
-// })
+            ch2.consume(queue, (msg) => {
+                if (msg !== null) {
+                    console.log(msg.content.toString());
+                    ch2.ack(msg);
+                } else {
+                    console.log('Consumer cancelled by server');
+                }
+            });
+        });
+    })
+}
 
 
 
@@ -41,7 +42,7 @@ var amqp_url = process.env.CLOUDAMQP_URL || 'amqps://bxydesvc:xVZgGBKGj9okAD9Q7D
 //     }
 // }
 async function do_consume() {
-    var conn = await amqplib.connect(amqp_url, "heartbeat=60");
+    var conn = amqplib.connect(amqp_url, "heartbeat=60");
     var ch = await conn.createChannel()
     var q = 'test_queue';
     await conn.createChannel();
@@ -62,7 +63,8 @@ app.all('/', (req, res) => {
     console.log("Just got a request!")
     res.send('Yo!')
     console.log("This is printed after Yo!")
-    do_consume();
+    doconnect()
+    // do_consume();
     // connect();
 })
 app.listen(process.env.PORT || 3000)
